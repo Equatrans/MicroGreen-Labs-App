@@ -527,7 +527,7 @@ interface TextureErrorBoundaryState {
   hasError: boolean;
 }
 
-class TextureErrorBoundary extends Component<TextureErrorBoundaryProps, TextureErrorBoundaryState> {
+class TextureErrorBoundary extends React.Component<TextureErrorBoundaryProps, TextureErrorBoundaryState> {
   state: TextureErrorBoundaryState = { hasError: false };
 
   static getDerivedStateFromError(error: any) {
@@ -1035,4 +1035,685 @@ const Kit3DBuilder = () => {
           })); 
       }
   }, [config.autoMode]);
-  const calculatePrice = () => { let base = 1500; if (config.hasLight) base += 1200; if (config.hasFan) base += 600; if (config.hasPump) base += 800; if (config.hasHeater) base += 900; if (config.hasSensors) base += 1500; if (config.hasTempSensor) base += 300; if (config.hasHumiditySensor) base += 350; if (config.hasCamera) base += 2000; if (config.hasMusic) base += 1800; if (config.hasController) base += 2500; if (config.powerType === 'battery') base += 1000; if (config.hasLightSensor) base += 250; if (config.hasTimer) base += 450; let multiplier = 1; if (config.layout === 'double-h' || config.layout === 'double-v') multiplier = 2
+  const calculatePrice = () => { let base = 1500; if (config.hasLight) base += 1200; if (config.hasFan) base += 600; if (config.hasPump) base += 800; if (config.hasHeater) base += 900; if (config.hasSensors) base += 1500; if (config.hasTempSensor) base += 300; if (config.hasHumiditySensor) base += 350; if (config.hasCamera) base += 2000; if (config.hasMusic) base += 1800; if (config.hasController) base += 2500; if (config.powerType === 'battery') base += 1000; if (config.hasLightSensor) base += 250; if (config.hasTimer) base += 450; let multiplier = 1; if (config.layout === 'double-h' || config.layout === 'double-v') multiplier = 2; if (config.layout === 'quad') multiplier = 4; return base * multiplier; };
+  const price = calculatePrice();
+  const handleAddToCart = () => { addToCart({ id: `custom-${Date.now()}`, name: `Smart Farm (${config.layout})`, price: price, quantity: 1, customConfig: config, image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&q=80&w=400' }); };
+  return (
+    <div className="flex flex-col lg:flex-row h-screen bg-bg text-text">
+        <div className="lg:w-3/4 relative bg-gray-100">
+            <Canvas shadows camera={{ position: [8, 5, 8], fov: 45 }}>
+                <Suspense fallback={<CanvasLoader />}>
+                    <Environment preset="city" />
+                    <ambientLight intensity={0.5} />
+                    <pointLight position={[10, 10, 10]} intensity={1} castShadow />
+                    <group position={[0, -1, 0]}>
+                        <FarmAssembly config={config} />
+                    </group>
+                    <ContactShadows position={[0, -1.01, 0]} opacity={0.4} scale={10} blur={2} />
+                    <OrbitControls makeDefault minPolarAngle={0} maxPolarAngle={Math.PI / 2.2} />
+                </Suspense>
+            </Canvas>
+            <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
+                 <Link to="/" className="bg-white/90 backdrop-blur p-2 rounded-full shadow-lg hover:bg-white transition-colors"><ChevronLeft className="w-6 h-6 text-gray-700" /></Link>
+            </div>
+            <div className="absolute top-4 right-4 z-10 bg-white/90 backdrop-blur p-4 rounded-2xl shadow-xl border border-gray-100 max-w-xs">
+                <div className="text-3xl font-bold text-primary mb-1">{price} ₽</div>
+                <div className="text-xs text-muted mb-3">Итоговая стоимость конфигурации</div>
+                <button onClick={handleAddToCart} className="w-full bg-primary text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg hover:opacity-90 transition-all active:scale-[0.98]">
+                    <ShoppingBag className="w-5 h-5" /> В корзину
+                </button>
+            </div>
+        </div>
+        <div className="lg:w-1/4 bg-surface border-l border-gray-200 flex flex-col h-full overflow-hidden shadow-2xl z-20">
+            <div className="p-6 border-b border-gray-100 bg-surface">
+                <h2 className="text-2xl font-bold text-text flex items-center gap-2"><Settings className="w-6 h-6 text-primary"/> Конструктор</h2>
+                <p className="text-sm text-muted mt-1">Соберите свою идеальную ферму</p>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
+                {/* Layout Section */}
+                <div>
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-muted mb-3 flex items-center gap-2"><LayoutGrid className="w-4 h-4"/> Конфигурация</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                        {[
+                            { id: 'single', label: 'Одинарный', icon: Square },
+                            { id: 'double-h', label: 'Двойной (Гор)', icon: ArrowRightFromLine },
+                            { id: 'double-v', label: 'Двойной (Верт)', icon: ArrowDownToLine },
+                            { id: 'quad', label: 'Квадро', icon: LayoutGrid }
+                        ].map(opt => (
+                            <button key={opt.id} onClick={() => setConfig({...config, layout: opt.id as any})} className={`p-3 rounded-xl border text-left transition-all ${config.layout === opt.id ? 'border-primary bg-green-50 text-primary' : 'border-gray-200 hover:border-gray-300 bg-white'}`}>
+                                <opt.icon className={`w-5 h-5 mb-2 ${config.layout === opt.id ? 'text-primary' : 'text-gray-400'}`} />
+                                <span className="text-xs font-bold block">{opt.label}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+                 {/* Lid Type */}
+                 <div>
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-muted mb-3 flex items-center gap-2"><Maximize2 className="w-4 h-4"/> Крышка</h3>
+                    <div className="flex gap-2 bg-gray-100 p-1 rounded-xl">
+                        <button onClick={() => setConfig({...config, lidType: 'flat'})} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${config.lidType.includes('flat') ? 'bg-white shadow-sm text-primary' : 'text-gray-500 hover:text-gray-700'}`}>Плоская</button>
+                        <button onClick={() => setConfig({...config, lidType: 'domed'})} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${config.lidType.includes('domed') ? 'bg-white shadow-sm text-primary' : 'text-gray-500 hover:text-gray-700'}`}>Купол</button>
+                    </div>
+                    <div className="mt-2 flex items-center gap-2">
+                         <input type="checkbox" id="vents" checked={config.lidType.includes('vent')} onChange={(e) => setConfig({...config, lidType: e.target.checked ? (config.lidType.includes('domed') ? 'domed-vent' : 'flat-vent') : (config.lidType.includes('domed') ? 'domed' : 'flat')})} className="rounded text-primary focus:ring-primary" />
+                         <label htmlFor="vents" className="text-sm font-medium text-text cursor-pointer select-none">Вентиляционные отверстия</label>
+                    </div>
+                </div>
+                {/* Substrate */}
+                <div>
+                     <h3 className="text-sm font-bold uppercase tracking-wider text-muted mb-3 flex items-center gap-2"><Layers className="w-4 h-4"/> Субстрат</h3>
+                     <div className="grid grid-cols-3 gap-2">
+                        {[
+                            { id: 'linen', label: 'Лен', color: '#d6d3d1' },
+                            { id: 'coco', label: 'Кокос', color: '#5d4037' },
+                            { id: 'wool', label: 'Агровата', color: '#f1f5f9' }
+                        ].map(s => (
+                            <button key={s.id} onClick={() => setConfig({...config, substrate: s.id as any})} className={`p-2 rounded-xl border flex flex-col items-center gap-2 transition-all ${config.substrate === s.id ? 'border-primary bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                                <div className="w-6 h-6 rounded-full border border-gray-300 shadow-sm" style={{ backgroundColor: s.color }}></div>
+                                <span className="text-xs font-medium">{s.label}</span>
+                            </button>
+                        ))}
+                     </div>
+                </div>
+                {/* Modules */}
+                <div>
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-muted mb-3 flex items-center gap-2"><Cpu className="w-4 h-4"/> Модули</h3>
+                    <div className="space-y-2">
+                        {[
+                            { key: 'hasLight', label: 'Фитосвет', icon: Sun, price: 1200 },
+                            { key: 'hasFan', label: 'Вентиляция', icon: Wind, price: 600 },
+                            { key: 'hasPump', label: 'Автополив', icon: Droplets, price: 800 },
+                            { key: 'hasHeater', label: 'Подогрев', icon: Thermometer, price: 900 },
+                            { key: 'hasCamera', label: 'Камера', icon: Camera, price: 2000 },
+                            { key: 'hasMusic', label: 'Music Box', icon: Radio, price: 1800 },
+                             { key: 'hasController', label: 'Контроллер', icon: Cpu, price: 2500 }
+                        ].map(mod => (
+                            <button key={mod.key} onClick={() => setConfig({...config, [mod.key]: !config[mod.key as keyof CustomKitConfig]})} className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all ${config[mod.key as keyof CustomKitConfig] ? 'border-primary bg-green-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                                <div className="flex items-center gap-3">
+                                    <div className={`p-2 rounded-lg ${config[mod.key as keyof CustomKitConfig] ? 'bg-white text-primary' : 'bg-gray-100 text-gray-500'}`}><mod.icon className="w-4 h-4" /></div>
+                                    <span className={`text-sm font-medium ${config[mod.key as keyof CustomKitConfig] ? 'text-primary' : 'text-text'}`}>{mod.label}</span>
+                                </div>
+                                <span className="text-xs font-bold text-muted">+{mod.price}₽</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+                 {/* Sensors */}
+                 <div>
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-muted mb-3 flex items-center gap-2"><Activity className="w-4 h-4"/> Датчики</h3>
+                    <div className="flex flex-wrap gap-2">
+                        <button onClick={() => setConfig({...config, hasTempSensor: !config.hasTempSensor})} className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all ${config.hasTempSensor ? 'border-primary bg-green-50 text-primary' : 'border-gray-200 text-gray-600'}`}>Температура (+300₽)</button>
+                        <button onClick={() => setConfig({...config, hasHumiditySensor: !config.hasHumiditySensor})} className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all ${config.hasHumiditySensor ? 'border-primary bg-green-50 text-primary' : 'border-gray-200 text-gray-600'}`}>Влажность (+350₽)</button>
+                        <button onClick={() => setConfig({...config, hasLightSensor: !config.hasLightSensor})} className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all ${config.hasLightSensor ? 'border-primary bg-green-50 text-primary' : 'border-gray-200 text-gray-600'}`}>Освещение (+250₽)</button>
+                    </div>
+                 </div>
+                 {/* Power */}
+                 <div>
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-muted mb-3 flex items-center gap-2"><Zap className="w-4 h-4"/> Питание</h3>
+                    <div className="flex gap-2">
+                        <button onClick={() => setConfig({...config, powerType: 'grid'})} className={`flex-1 p-3 rounded-xl border flex flex-col items-center gap-1 transition-all ${config.powerType === 'grid' ? 'border-primary bg-green-50 text-primary' : 'border-gray-200 hover:bg-gray-50'}`}>
+                            <Unplug className="w-5 h-5" />
+                            <span className="text-xs font-bold">Сеть</span>
+                        </button>
+                         <button onClick={() => setConfig({...config, powerType: 'battery'})} className={`flex-1 p-3 rounded-xl border flex flex-col items-center gap-1 transition-all ${config.powerType === 'battery' ? 'border-primary bg-green-50 text-primary' : 'border-gray-200 hover:bg-gray-50'}`}>
+                            <Battery className="w-5 h-5" />
+                            <span className="text-xs font-bold">АКБ (+1000₽)</span>
+                        </button>
+                    </div>
+                 </div>
+                 {/* Auto Mode */}
+                 <div className="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl p-4 text-white shadow-lg">
+                     <div className="flex items-center justify-between mb-2">
+                         <div className="flex items-center gap-2 font-bold"><Sparkles className="w-4 h-4 text-yellow-300"/> Auto Mode</div>
+                         <div onClick={() => setConfig({...config, autoMode: !config.autoMode})} className={`w-10 h-5 rounded-full relative cursor-pointer transition-colors ${config.autoMode ? 'bg-green-400' : 'bg-white/30'}`}>
+                             <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${config.autoMode ? 'left-6' : 'left-1'}`}></div>
+                         </div>
+                     </div>
+                     <p className="text-xs text-white/80">Полная автоматизация: включаются все модули и датчики для автономного выращивания.</p>
+                 </div>
+            </div>
+        </div>
+    </div>
+  );
+};
+
+// --- App Root ---
+
+const App = () => {
+  return (
+    <Router>
+      <ThemeProvider>
+        <div className="min-h-screen bg-bg text-text transition-colors duration-300 font-sans selection:bg-primary selection:text-white flex flex-col">
+          <Navbar />
+          <div className="flex-1 flex flex-col">
+             <Routes>
+                <Route path="/" element={<HomeComponent />} />
+                <Route path="/shop" element={<ShopComponent />} />
+                <Route path="/builder" element={<Kit3DBuilder />} />
+                <Route path="/checkout" element={<CheckoutComponent />} />
+                <Route path="/dashboard" element={<DashboardComponent />} />
+                <Route path="/admin" element={<AdminDashboardComponent />} />
+                <Route path="/login" element={<LoginComponent />} />
+                <Route path="/reviews" element={<ReviewsComponent />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+             </Routes>
+          </div>
+          <CartDrawer />
+          <Footer />
+        </div>
+      </ThemeProvider>
+    </Router>
+  );
+};
+
+const HomeComponent = () => {
+    return (
+        <div className="flex-1 flex flex-col">
+            {/* Hero Section */}
+            <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
+                <div className="absolute inset-0 z-0">
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-bg/80 to-bg z-10" />
+                     <img src="https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?auto=format&fit=crop&q=80&w=2070" className="w-full h-full object-cover opacity-20" alt="Hero Background" />
+                </div>
+                
+                <div className="max-w-7xl mx-auto px-4 relative z-20 text-center">
+                    <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="mb-6 inline-block">
+                        <span className="bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-bold tracking-wide uppercase border border-primary/20 backdrop-blur-sm">
+                            Будущее сити-фермерства
+                        </span>
+                    </motion.div>
+                    <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }} className="text-5xl md:text-8xl font-bold mb-8 leading-tight bg-clip-text text-transparent bg-gradient-to-r from-primary via-green-400 to-accent">
+                        Ферма на вашем <br/> подоконнике
+                    </motion.h1>
+                    <motion.p initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }} className="text-xl md:text-2xl text-muted mb-12 max-w-3xl mx-auto leading-relaxed">
+                        Выращивайте свежие витамины круглый год. Без земли, без грязи, с умными технологиями автоматизации.
+                    </motion.p>
+                    <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.3 }} className="flex flex-col sm:flex-row gap-4 justify-center">
+                        <Link to="/shop" className="px-8 py-4 bg-primary text-white rounded-full font-bold text-lg hover:shadow-lg hover:bg-green-500 transition-all flex items-center justify-center gap-2">
+                            <ShoppingBag className="w-5 h-5" />
+                            Каталог
+                        </Link>
+                        <Link to="/builder" className="px-8 py-4 bg-surface text-text border border-gray-200 rounded-full font-bold text-lg hover:bg-gray-50 transition-all flex items-center justify-center gap-2">
+                            <Box className="w-5 h-5" />
+                            Конструктор 3D
+                        </Link>
+                    </motion.div>
+                </div>
+            </section>
+        </div>
+    );
+};
+
+const ShopComponent = () => {
+    const { addToCart } = useAppContext();
+    const [products, setProducts] = useState<Product[]>([]);
+    const [selectedCategory, setSelectedCategory] = useState<string>('all');
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+    useEffect(() => {
+        setProducts(storageService.getProducts());
+    }, []);
+
+    const filteredProducts = selectedCategory === 'all' ? products : products.filter(p => p.category === selectedCategory);
+
+    return (
+        <div className="pt-24 pb-12 px-4 max-w-7xl mx-auto">
+             <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+                <div>
+                    <h1 className="text-4xl md:text-5xl font-bold mb-4">Каталог</h1>
+                    <p className="text-muted text-lg">Выберите готовое решение или создайте своё</p>
+                </div>
+                <div className="flex gap-2 bg-white p-1 rounded-xl shadow-sm border border-gray-100 overflow-x-auto max-w-full">
+                    {[
+                        { id: 'all', label: 'Все' },
+                        { id: 'kit', label: 'Наборы' },
+                        { id: 'seeds', label: 'Семена' },
+                        { id: 'accessories', label: 'Аксессуары' }
+                    ].map(cat => (
+                        <button 
+                            key={cat.id} 
+                            onClick={() => setSelectedCategory(cat.id)}
+                            className={`px-6 py-2 rounded-lg font-bold text-sm whitespace-nowrap transition-all ${selectedCategory === cat.id ? 'bg-gray-900 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
+                        >
+                            {cat.label}
+                        </button>
+                    ))}
+                </div>
+             </div>
+
+             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                 <AnimatePresence>
+                    {filteredProducts.map(product => (
+                        <motion.div 
+                            layout
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            key={product.id} 
+                            className="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col"
+                        >
+                            <div className="relative h-64 overflow-hidden cursor-pointer" onClick={() => setSelectedProduct(product)}>
+                                <ImageWithFallback src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                                {product.isHit && (
+                                    <div className="absolute top-3 left-3 bg-yellow-400 text-black text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-sm">
+                                        <Sparkles className="w-3 h-3" /> ХИТ
+                                    </div>
+                                )}
+                                <button className="absolute bottom-3 right-3 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                                    <Maximize2 className="w-5 h-5 text-gray-700" />
+                                </button>
+                            </div>
+                            <div className="p-5 flex flex-col flex-1">
+                                <div onClick={() => setSelectedProduct(product)} className="cursor-pointer">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h3 className="text-lg font-bold text-gray-900 leading-tight line-clamp-2">{product.name}</h3>
+                                    </div>
+                                    <p className="text-sm text-gray-500 line-clamp-2 mb-4 h-10">{product.description}</p>
+                                </div>
+                                <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-50">
+                                    <div className="flex flex-col">
+                                        {product.oldPrice && <span className="text-xs text-gray-400 line-through mb-0.5">{product.oldPrice} ₽</span>}
+                                        <span className="text-xl font-bold text-primary">{product.price} ₽</span>
+                                    </div>
+                                    <button 
+                                        onClick={() => addToCart({...product, quantity: 1})}
+                                        className="bg-gray-900 text-white p-3 rounded-xl hover:bg-primary transition-colors shadow-lg active:scale-95"
+                                    >
+                                        <ShoppingBag className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    ))}
+                 </AnimatePresence>
+             </div>
+
+             <AnimatePresence>
+                {selectedProduct && <ProductDetailModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />}
+             </AnimatePresence>
+        </div>
+    );
+};
+
+const LoginComponent = () => {
+    const { login } = useAppContext();
+    const navigate = useNavigate();
+    const [email, setEmail] = useState('');
+
+    const handleLogin = (e: React.FormEvent) => {
+        e.preventDefault();
+        login(email);
+        navigate('/dashboard');
+    };
+
+    return (
+        <div className="min-h-screen flex items-center justify-center px-4 bg-gray-50">
+            <div className="bg-white p-8 md:p-12 rounded-3xl shadow-2xl w-full max-w-md border border-gray-100">
+                <div className="text-center mb-8">
+                     <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 text-primary">
+                         <UserIcon className="w-8 h-8" />
+                     </div>
+                     <h1 className="text-3xl font-bold text-gray-900">Добро пожаловать</h1>
+                     <p className="text-gray-500 mt-2">Введите email для входа</p>
+                </div>
+                <form onSubmit={handleLogin} className="space-y-6">
+                    <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Email</label>
+                        <input 
+                            type="email" 
+                            required 
+                            value={email} 
+                            onChange={(e) => setEmail(e.target.value)} 
+                            className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none" 
+                            placeholder="user@example.com"
+                        />
+                    </div>
+                    <button type="submit" className="w-full py-4 bg-primary text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all">
+                        Войти
+                    </button>
+                </form>
+                <div className="mt-6 text-center text-xs text-gray-400">
+                    <p>Для демо-админа используйте: m@m.com</p>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const DashboardComponent = () => {
+    const { user, logout } = useAppContext();
+    const navigate = useNavigate();
+    const [orders, setOrders] = useState<Order[]>([]);
+
+    useEffect(() => {
+        if (user) {
+            setOrders(storageService.getOrders(user.id));
+        } else {
+            navigate('/login');
+        }
+    }, [user, navigate]);
+    
+    if (!user) return null;
+
+    return (
+        <div className="pt-24 pb-12 px-4 max-w-7xl mx-auto min-h-screen">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900">Личный кабинет</h1>
+                    <p className="text-gray-500">Добро пожаловать, {user.name}</p>
+                </div>
+                <button onClick={() => { logout(); navigate('/'); }} className="flex items-center gap-2 text-red-500 font-bold bg-red-50 px-4 py-2 rounded-xl hover:bg-red-100 transition-colors">
+                    <LogOut className="w-5 h-5" /> Выйти
+                </button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 space-y-6">
+                    <h2 className="text-xl font-bold flex items-center gap-2"><Package className="w-6 h-6 text-primary"/> История заказов</h2>
+                    
+                    {orders.length === 0 ? (
+                        <div className="bg-white p-12 rounded-3xl text-center border border-dashed border-gray-300">
+                            <Package className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+                            <p className="text-gray-500 text-lg mb-6">У вас пока нет заказов</p>
+                            <Link to="/shop" className="bg-primary text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all">Перейти в магазин</Link>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {orders.map(order => {
+                                const statusInfo = STATUS_DETAILS[order.status] || STATUS_DETAILS['pending'];
+                                return (
+                                    <div key={order.id} className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:shadow-md transition-all">
+                                        <div className="flex flex-col md:flex-row justify-between mb-6 gap-4 border-b border-gray-50 pb-4">
+                                            <div className="flex items-start gap-4">
+                                                <div className={`p-3 rounded-2xl ${statusInfo.color} bg-opacity-20`}>
+                                                    <statusInfo.icon className="w-6 h-6" />
+                                                </div>
+                                                <div>
+                                                    <div className="text-sm text-gray-400 font-medium">Заказ #{order.id}</div>
+                                                    <div className="font-bold text-lg">{new Date(order.date).toLocaleDateString()}</div>
+                                                    <div className="text-xs text-gray-400 mt-1">{statusInfo.desc}</div>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-2xl font-bold text-gray-900">{order.total} ₽</div>
+                                                <div className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mt-2 border ${statusInfo.color}`}>
+                                                    {statusInfo.label}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-3">
+                                            {order.items.map((item, i) => (
+                                                <div key={i} className="flex justify-between items-center text-sm p-3 bg-gray-50 rounded-xl">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 bg-white rounded-lg overflow-hidden shrink-0">
+                                                            {item.image && <img src={item.image} className="w-full h-full object-cover" alt="" />}
+                                                        </div>
+                                                        <span className="font-medium">{item.name} <span className="text-gray-400">x{item.quantity}</span></span>
+                                                    </div>
+                                                    <span className="font-bold">{item.price * item.quantity} ₽</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+
+                <div className="space-y-6">
+                    <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+                        <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><UserIcon className="w-5 h-5 text-gray-400"/> Профиль</h3>
+                        <div className="space-y-4">
+                            <div className="p-4 bg-gray-50 rounded-xl">
+                                <span className="text-xs text-gray-400 uppercase font-bold tracking-wider block mb-1">Имя</span>
+                                <div className="font-medium text-gray-900">{user.name}</div>
+                            </div>
+                            <div className="p-4 bg-gray-50 rounded-xl">
+                                <span className="text-xs text-gray-400 uppercase font-bold tracking-wider block mb-1">Email</span>
+                                <div className="font-medium text-gray-900">{user.email}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const CheckoutComponent = () => {
+    const { cart, user, clearCart, login } = useAppContext();
+    const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
+
+    const handleOrder = (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        const form = e.target as HTMLFormElement;
+        const formData = new FormData(form);
+        
+        let currentUserId = user?.id;
+        if (!currentUserId) {
+            const email = formData.get('email') as string;
+            const newUser = storageService.login(email);
+            currentUserId = newUser.id;
+            login(email);
+        }
+
+        const order: Order = {
+            id: `ord-${Date.now()}`,
+            userId: currentUserId!,
+            items: cart,
+            total: cart.reduce((acc, item) => acc + item.price * item.quantity, 0),
+            status: 'pending',
+            date: new Date().toISOString(),
+            address: formData.get('address') as string,
+        };
+
+        storageService.createOrder(order);
+        
+        setTimeout(() => {
+            clearCart();
+            setLoading(false);
+            navigate('/dashboard');
+        }, 1500);
+    };
+
+    if (cart.length === 0) {
+        return (
+            <div className="pt-32 px-4 text-center min-h-screen">
+                <ShoppingBag className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+                <h2 className="text-2xl font-bold mb-4">Корзина пуста</h2>
+                <Link to="/shop" className="text-primary font-bold hover:underline">Вернуться в магазин</Link>
+            </div>
+        );
+    }
+
+    return (
+        <div className="pt-24 pb-12 px-4 max-w-3xl mx-auto">
+            <h1 className="text-3xl font-bold mb-8 text-center">Оформление заказа</h1>
+            <div className="bg-white p-8 md:p-10 rounded-3xl shadow-xl border border-gray-100">
+                <form onSubmit={handleOrder} className="space-y-8">
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2 text-primary font-bold uppercase tracking-wider text-sm mb-2">
+                             <UserIcon className="w-4 h-4" /> Контактные данные
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <input name="name" required placeholder="Имя" defaultValue={user?.name} className="w-full p-4 bg-gray-50 rounded-xl border border-transparent focus:border-primary focus:bg-white transition-all outline-none" />
+                            <input name="email" type="email" required placeholder="Email" defaultValue={user?.email} className="w-full p-4 bg-gray-50 rounded-xl border border-transparent focus:border-primary focus:bg-white transition-all outline-none" />
+                        </div>
+                        <input name="phone" type="tel" required placeholder="Телефон" className="w-full p-4 bg-gray-50 rounded-xl border border-transparent focus:border-primary focus:bg-white transition-all outline-none" />
+                    </div>
+                    
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2 text-primary font-bold uppercase tracking-wider text-sm mb-2">
+                             <MapPin className="w-4 h-4" /> Доставка
+                        </div>
+                        <textarea name="address" required placeholder="Адрес доставки (Город, Улица, Дом, Кв)" className="w-full p-4 bg-gray-50 rounded-xl border border-transparent focus:border-primary focus:bg-white transition-all outline-none h-32 resize-none" />
+                    </div>
+
+                    <div className="bg-gray-50 p-6 rounded-2xl">
+                         <div className="flex justify-between items-center mb-6">
+                            <span className="text-gray-500 font-medium">Итого к оплате:</span>
+                            <span className="text-3xl font-bold text-gray-900">{cart.reduce((acc, item) => acc + item.price * item.quantity, 0)} ₽</span>
+                        </div>
+                        <button type="submit" disabled={loading} className="w-full py-4 bg-primary text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
+                            {loading ? 'Обработка заказа...' : 'Подтвердить заказ'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+const ReviewsComponent = () => {
+    const [reviews, setReviews] = useState<Review[]>([]);
+    const [isFormOpen, setIsFormOpen] = useState(false);
+
+    useEffect(() => {
+        setReviews(storageService.getReviews());
+    }, []);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        const form = e.target as HTMLFormElement;
+        const formData = new FormData(form);
+        const newReview: Review = {
+            id: `rev-${Date.now()}`,
+            userId: `guest`,
+            userName: formData.get('name') as string,
+            rating: Number(formData.get('rating')),
+            comment: formData.get('comment') as string,
+            date: new Date().toISOString()
+        };
+        storageService.addReview(newReview);
+        setReviews(storageService.getReviews());
+        setIsFormOpen(false);
+    };
+
+    return (
+        <div className="pt-24 pb-12 px-4 max-w-7xl mx-auto">
+            <div className="text-center mb-16">
+                <h1 className="text-4xl font-bold mb-4">Отзывы клиентов</h1>
+                <p className="text-muted text-lg max-w-2xl mx-auto">Мы гордимся тем, что наши клиенты выращивают свежую зелень круглый год. Вот что они говорят о нас.</p>
+                <button onClick={() => setIsFormOpen(!isFormOpen)} className="mt-8 px-8 py-3 bg-primary text-white rounded-full font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2 mx-auto">
+                    <Edit className="w-4 h-4"/> Оставить отзыв
+                </button>
+            </div>
+
+            <AnimatePresence>
+                {isFormOpen && (
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden mb-12 max-w-2xl mx-auto">
+                        <div className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100">
+                            <h3 className="font-bold text-xl mb-6 text-center">Написать отзыв</h3>
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <input name="name" required placeholder="Ваше имя" className="w-full p-4 bg-gray-50 rounded-xl outline-none focus:ring-2 focus:ring-primary/20" />
+                                    <select name="rating" className="w-full p-4 bg-gray-50 rounded-xl outline-none focus:ring-2 focus:ring-primary/20">
+                                        <option value="5">5 - Отлично</option>
+                                        <option value="4">4 - Хорошо</option>
+                                        <option value="3">3 - Нормально</option>
+                                    </select>
+                                </div>
+                                <textarea name="comment" required placeholder="Ваш комментарий" className="w-full p-4 bg-gray-50 rounded-xl h-32 outline-none focus:ring-2 focus:ring-primary/20 resize-none" />
+                                <button type="submit" className="w-full py-4 bg-gray-900 text-white font-bold rounded-xl shadow-lg">Отправить отзыв</button>
+                            </form>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {reviews.map((review, idx) => (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.1 }}
+                        key={review.id} 
+                        className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col hover:shadow-md transition-all"
+                    >
+                        <div className="flex items-center gap-1 text-yellow-400 mb-4">
+                            {[...Array(5)].map((_, i) => (
+                                <Star key={i} className={`w-5 h-5 ${i < review.rating ? 'fill-current' : 'text-gray-200'}`} />
+                            ))}
+                        </div>
+                        <p className="text-gray-600 text-lg leading-relaxed mb-6 flex-1">"{review.comment}"</p>
+                        <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-50">
+                            <div className="font-bold text-gray-900">{review.userName}</div>
+                            <div className="text-xs text-gray-400">{new Date(review.date).toLocaleDateString()}</div>
+                        </div>
+                    </motion.div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+const AdminDashboardComponent = () => {
+    const { user, logout } = useAppContext();
+    const navigate = useNavigate();
+    const [activeTab, setActiveTab] = useState('products');
+    // Simplified for UI demo
+    if (!user || user.role !== 'admin') {
+         return <div className="min-h-screen flex items-center justify-center">Restricted Access</div>;
+    }
+    return (
+        <div className="pt-24 pb-12 px-4 max-w-7xl mx-auto min-h-screen">
+             <div className="flex justify-between items-center mb-8">
+                <h1 className="text-3xl font-bold">Admin Panel</h1>
+                <button onClick={() => { logout(); navigate('/'); }} className="text-red-500 font-bold">Logout</button>
+            </div>
+            <div className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 text-center text-gray-500">
+                Admin functionality is simplified for this demo.
+            </div>
+        </div>
+    );
+};
+
+const Footer = () => (
+    <footer className="bg-surface border-t border-gray-200 pt-16 pb-8 px-4 mt-auto">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+            <div className="space-y-6">
+                <div className="flex items-center gap-2 text-2xl font-bold text-primary">
+                    <LucideLeaf className="h-6 w-6" />
+                    <span>MicroGreenLabs</span>
+                </div>
+                <p className="text-sm text-muted leading-relaxed">
+                    Инновационные технологии для выращивания свежей микрозелени прямо у вас на кухне.
+                </p>
+            </div>
+            <div>
+                <h4 className="font-bold text-lg mb-6 text-text">Магазин</h4>
+                <ul className="space-y-4 text-sm text-muted">
+                    <li><Link to="/shop" className="hover:text-primary transition-colors">Каталог</Link></li>
+                    <li><Link to="/builder" className="hover:text-primary transition-colors">Конфигуратор 3D</Link></li>
+                    <li><Link to="/reviews" className="hover:text-primary transition-colors">Отзывы</Link></li>
+                </ul>
+            </div>
+            <div>
+                <h4 className="font-bold text-lg mb-6 text-text">Покупателям</h4>
+                <ul className="space-y-4 text-sm text-muted">
+                    <li><Link to="/login" className="hover:text-primary transition-colors">Личный кабинет</Link></li>
+                    <li><a href="#" className="hover:text-primary transition-colors">Доставка и оплата</a></li>
+                    <li><a href="#" className="hover:text-primary transition-colors">Гарантия</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 className="font-bold text-lg mb-6 text-text">Контакты</h4>
+                <ul className="space-y-4 text-sm text-muted">
+                    <li className="flex items-center gap-3"><Phone className="w-4 h-4" /> {CONTACT_INFO.phone}</li>
+                    <li className="flex items-center gap-3"><Mail className="w-4 h-4" /> {CONTACT_INFO.email}</li>
+                    <li className="flex items-center gap-3"><MapPin className="w-4 h-4" /> {CONTACT_INFO.address}</li>
+                </ul>
+            </div>
+        </div>
+        <div className="max-w-7xl mx-auto pt-8 border-t border-gray-100 text-center text-sm text-gray-400">
+            &copy; 2023 MicroGreen Labs. Все права защищены.
+        </div>
+    </footer>
+);
+
+export default App;
